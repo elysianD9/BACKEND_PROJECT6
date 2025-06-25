@@ -4,15 +4,43 @@ import { DB } from "./constants.js";
 import dotenv from 'dotenv';
 dotenv.config({ path : './.env'})
 
-import express from 'express';
+
 import dbConnection from "./db/db.js";
-const app = express();
+import app from "./app.js";
+import express from "express";
+import cors from 'cors';
+import cookieParser  from 'cookie-parser';
 
-dbConnection();
+app.use(cors({
+    origin : process.env.ORIGIN,
+    credentials : true
+}));
+app.use(express.json({
+    limit : '16kb'
+}));
+app.use(express.urlencoded({
+    extended : true,
+    limit : '16kb'
+}));
+app.use(express.static('public'));
+app.use(cookieParser());
 
-app.listen(process.env.PORT , () => {
-    console.log(`CONNECTED TO PORT : ${process.env.PORT}`);
-})
+
+dbConnection().then(
+   () => {
+     app.listen(process.env.PORT || 8000 , () => {
+        console.log(`Listening to port : ${process.env.PORT}`);
+    }),
+    app.on('error' , (error) => {
+        console.error("error : " , error);
+        throw error;
+    })
+   }
+).catch((error) => {
+    console.error("connection failed...",error);
+});
+
+
 
 // //effee 
 // (async () => {
